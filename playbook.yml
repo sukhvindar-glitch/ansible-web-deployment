@@ -1,0 +1,35 @@
+---
+- name: project1
+  hosts: webserver
+  become: yes
+  vars:
+    port1: 80
+    server_name: 172.31.73.243
+    doc_root: /var/www/html/
+  tasks:
+   - name: Create a user 'ansibleuser' with a home directory
+     ansible.builtin.user:
+       name: ansibleuser
+       create_home: yes
+       groups: sudo
+   - name: Install "nginx" 
+     ansible.builtin.apt:
+       name: nginx
+       state: present
+       update_cache: yes
+   - name: Copy file with owner and permissions
+     ansible.builtin.copy:
+       src: /home/ubuntu/DWA/files/
+       dest: /var/www/html/
+       mode: '0644'
+   - name: Apply Nginx template
+     ansible.builtin.template:
+       src: /home/ubuntu/DWA/template/nginx.conf.j2
+       dest: /etc/nginx/sites-available/myapp
+     notify: Restart nginx
+
+  handlers:
+   - name: Restart nginx
+     ansible.builtin.service:
+        name: nginx
+        state: restarted   
